@@ -22,4 +22,21 @@
     <string name="go_live">GO LIVE</string>
     <string name="stop_live">إيقاف البث</string>
     <string name="stream_footer">Stream 22 • GitHub Ready</string>
+    <string name="oauth_config_title">إعدادات حسابات البث (OAuth)</string>
+    <string name="oauth_config_desc">أدخل بيانات الاعتماد و OAuth لكل منصة لحفظها وإدارتها تلقائياً</string>
+    <string name="client_id_label">Client ID / App ID</string>
+    <string name="client_secret_label">Client Secret / App Secret</string>
+    <string name="redirect_uri_label">Redirect URI</string>
+    <string name="stream_key_label">Stream Key / Access Token</string>
+    <string name="ingest_url_label">RTMP Ingest Server</string>
+    <string name="save_credentials">حفظ الإعدادات</string>
+    <string name="connect_oauth">تسجيل الدخول وربط OAuth</string>
+    <string name="test_connection">اختبار الاتصال</string>
+    <string name="status_connected">متصل وجاهز للبث</string>
+    <string name="status_not_configured">غير مهيأ</string>
+    <string name="credentials_saved">تم حفظ بيانات الاعتماد بنجاح</string>
+    <string name="platform_twitch">Twitch</string>
+    <string name="platform_youtube">YouTube Live</string>
+    <string name="platform_facebook">Facebook Live</string>
+    <string name="platform_tiktok">TikTok Live</string>
 </resources>

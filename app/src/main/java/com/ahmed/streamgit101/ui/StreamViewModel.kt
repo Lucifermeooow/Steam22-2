@@ -181,7 +181,75 @@ class StreamViewModel : ViewModel() {
         }
     }
 
+    fun openOAuthConfig(platformId: String? = null) {
+        _uiState.update {
+            it.copy(
+                isOAuthConfigOpen = true,
+                selectedOAuthTab = platformId ?: it.selectedOAuthTab
+            )
+        }
+    }
+
+    fun closeOAuthConfig() {
+        _uiState.update { it.copy(isOAuthConfigOpen = false) }
+    }
+
+    fun selectOAuthTab(platformId: String) {
+        _uiState.update { it.copy(selectedOAuthTab = platformId) }
+    }
+
+    fun updateOAuthField(
+        platformId: String,
+        clientId: String? = null,
+        clientSecret: String? = null,
+        redirectUri: String? = null,
+        streamKey: String? = null,
+        rtmpIngestUrl: String? = null
+    ) {
+        val currentCredentials = _uiState.value.oauthCredentials.toMutableMap()
+        val current = currentCredentials[platformId] ?: return
+        currentCredentials[platformId] = current.copy(
+            clientId = clientId ?: current.clientId,
+            clientSecret = clientSecret ?: current.clientSecret,
+            redirectUri = redirectUri ?: current.redirectUri,
+            streamKey = streamKey ?: current.streamKey,
+            rtmpIngestUrl = rtmpIngestUrl ?: current.rtmpIngestUrl
+        )
+        _uiState.update { it.copy(oauthCredentials = currentCredentials) }
+    }
+
+    fun saveOAuthCredentials(platformId: String) {
+        val currentCredentials = _uiState.value.oauthCredentials.toMutableMap()
+        val current = currentCredentials[platformId] ?: return
+        val isReady = current.clientId.isNotBlank() || current.streamKey.isNotBlank()
+        currentCredentials[platformId] = current.copy(isConnected = isReady)
+        _uiState.update {
+            it.copy(
+                oauthCredentials = currentCredentials,
+                snackbarMessage = "تم حفظ إعدادات ${current.displayName} بنجاح"
+            )
+        }
+    }
+
+    fun disconnectOAuth(platformId: String) {
+        val currentCredentials = _uiState.value.oauthCredentials.toMutableMap()
+        val current = currentCredentials[platformId] ?: return
+        currentCredentials[platformId] = current.copy(
+            clientId = "",
+            clientSecret = "",
+            streamKey = "",
+            isConnected = false
+        )
+        _uiState.update {
+            it.copy(
+                oauthCredentials = currentCredentials,
+                snackbarMessage = "تم إلغاء ربط ${current.displayName}"
+            )
+        }
+    }
+
     fun clearSnackbar() {
         _uiState.update { it.copy(snackbarMessage = null) }
     }
 }
+

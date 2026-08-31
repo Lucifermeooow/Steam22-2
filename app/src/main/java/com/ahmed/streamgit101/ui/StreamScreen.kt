@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,17 +25,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.FlipCameraAndroid
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -64,9 +69,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Settings
 import com.ahmed.streamgit101.R
 import com.ahmed.streamgit101.ui.components.CameraPreviewView
 import com.ahmed.streamgit101.ui.components.DestinationTile
+import com.ahmed.streamgit101.ui.components.OAuthConfigurationDialog
 import com.ahmed.streamgit101.ui.components.StreamStatsRow
 import com.ahmed.streamgit101.ui.theme.DarkBackground
 import com.ahmed.streamgit101.ui.theme.DarkSurface
@@ -121,6 +129,16 @@ fun StreamScreen(
                     )
                 },
                 actions = {
+                    IconButton(
+                        onClick = { viewModel.openOAuthConfig() },
+                        modifier = Modifier.testTag("open_oauth_settings_appbar_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Key,
+                            contentDescription = "إعدادات OAuth وحسابات البث",
+                            tint = Color.White
+                        )
+                    }
                     IconButton(
                         onClick = { viewModel.prepareCamera() },
                         enabled = !uiState.isBusy && !uiState.isLive,
@@ -262,42 +280,102 @@ fun StreamScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // OAuth Provider Buttons
+            // Dedicated OAuth Configuration Card Button
+            Card(
+                onClick = { viewModel.openOAuthConfig() },
+                colors = CardDefaults.cardColors(containerColor = DarkSurface),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("open_oauth_config_card")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Key,
+                        contentDescription = null,
+                        tint = StreamRed,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.oauth_config_title),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        )
+                        Text(
+                            text = "إدخال وحفظ بيانات الاعتماد (YouTube, Twitch, Facebook, TikTok)",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = { viewModel.openOAuthConfig() },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = StreamRedLight)
+                    ) {
+                        Text("تهيئة")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // OAuth Provider Buttons (YouTube, Twitch, Facebook, TikTok)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 OutlinedButton(
-                    onClick = { connectProvider("youtube") },
+                    onClick = { viewModel.openOAuthConfig("youtube") },
                     enabled = !uiState.isLive,
                     modifier = Modifier
                         .weight(1f)
                         .testTag("oauth_youtube_button"),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Text("YouTube")
+                    Text("YouTube", fontSize = 12.sp)
                 }
 
                 OutlinedButton(
-                    onClick = { connectProvider("facebook") },
+                    onClick = { viewModel.openOAuthConfig("twitch") },
+                    enabled = !uiState.isLive,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("oauth_twitch_button"),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                ) {
+                    Text("Twitch", fontSize = 12.sp)
+                }
+
+                OutlinedButton(
+                    onClick = { viewModel.openOAuthConfig("facebook") },
                     enabled = !uiState.isLive,
                     modifier = Modifier
                         .weight(1f)
                         .testTag("oauth_facebook_button"),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Text("Facebook")
+                    Text("Facebook", fontSize = 12.sp)
                 }
 
                 OutlinedButton(
-                    onClick = { connectProvider("tiktok") },
+                    onClick = { viewModel.openOAuthConfig("tiktok") },
                     enabled = !uiState.isLive,
                     modifier = Modifier
                         .weight(1f)
                         .testTag("oauth_tiktok_button"),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                 ) {
-                    Text("TikTok")
+                    Text("TikTok", fontSize = 12.sp)
                 }
             }
 
@@ -322,6 +400,15 @@ fun StreamScreen(
                 isLive = uiState.isLive,
                 onToggle = { viewModel.toggleDestination("YouTube", it) },
                 modifier = Modifier.testTag("destination_youtube")
+            )
+
+            DestinationTile(
+                name = "Twitch",
+                icon = Icons.Default.Tv,
+                isEnabled = uiState.destinations["Twitch"] ?: false,
+                isLive = uiState.isLive,
+                onToggle = { viewModel.toggleDestination("Twitch", it) },
+                modifier = Modifier.testTag("destination_twitch")
             )
 
             DestinationTile(
@@ -456,4 +543,19 @@ fun StreamScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+
+    OAuthConfigurationDialog(
+        isOpen = uiState.isOAuthConfigOpen,
+        selectedTab = uiState.selectedOAuthTab,
+        credentials = uiState.oauthCredentials,
+        backendUrl = uiState.backendUrl,
+        onTabSelected = { viewModel.selectOAuthTab(it) },
+        onUpdateField = { platformId, clientId, clientSecret, redirectUri, streamKey, rtmpIngestUrl ->
+            viewModel.updateOAuthField(platformId, clientId, clientSecret, redirectUri, streamKey, rtmpIngestUrl)
+        },
+        onSave = { viewModel.saveOAuthCredentials(it) },
+        onDisconnect = { viewModel.disconnectOAuth(it) },
+        onDismiss = { viewModel.closeOAuthConfig() }
+    )
 }
+

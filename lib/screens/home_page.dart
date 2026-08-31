@@ -36,8 +36,65 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   final Map<String, bool> _destinations = {
     'YouTube': true,
+    'Twitch': true,
     'Facebook': true,
     'TikTok': true,
+  };
+
+  // OAuth Credentials Store
+  final Map<String, Map<String, dynamic>> _oauthConfigs = {
+    'youtube': {
+      'name': 'YouTube Live',
+      'icon': Icons.play_circle_fill,
+      'color': const Color(0xFFFF0000),
+      'clientId': TextEditingController(),
+      'clientSecret': TextEditingController(),
+      'redirectUri': TextEditingController(text: 'https://your-server.example.com/auth/callback'),
+      'streamKey': TextEditingController(),
+      'ingestUrl': TextEditingController(text: 'rtmp://a.rtmp.youtube.com/live2'),
+      'scopes': 'https://www.googleapis.com/auth/youtube.force-ssl',
+      'authEndpoint': 'https://accounts.google.com/o/oauth2/v2/auth',
+      'isConnected': false,
+    },
+    'twitch': {
+      'name': 'Twitch',
+      'icon': Icons.tv,
+      'color': const Color(0xFF9146FF),
+      'clientId': TextEditingController(),
+      'clientSecret': TextEditingController(),
+      'redirectUri': TextEditingController(text: 'https://your-server.example.com/auth/callback'),
+      'streamKey': TextEditingController(),
+      'ingestUrl': TextEditingController(text: 'rtmp://live.twitch.tv/app/'),
+      'scopes': 'channel:manage:broadcast user:read:email',
+      'authEndpoint': 'https://id.twitch.tv/oauth2/authorize',
+      'isConnected': false,
+    },
+    'facebook': {
+      'name': 'Facebook Live',
+      'icon': Icons.facebook,
+      'color': const Color(0xFF1877F2),
+      'clientId': TextEditingController(),
+      'clientSecret': TextEditingController(),
+      'redirectUri': TextEditingController(text: 'https://your-server.example.com/auth/callback'),
+      'streamKey': TextEditingController(),
+      'ingestUrl': TextEditingController(text: 'rtmps://live-api-s.facebook.com:443/rtmp/'),
+      'scopes': 'publish_video,pages_show_list',
+      'authEndpoint': 'https://www.facebook.com/v19.0/dialog/oauth',
+      'isConnected': false,
+    },
+    'tiktok': {
+      'name': 'TikTok Live',
+      'icon': Icons.live_tv,
+      'color': const Color(0xFF00F2FE),
+      'clientId': TextEditingController(),
+      'clientSecret': TextEditingController(),
+      'redirectUri': TextEditingController(text: 'https://your-server.example.com/auth/callback'),
+      'streamKey': TextEditingController(),
+      'ingestUrl': TextEditingController(text: 'rtmp://live.tiktok.com/live/'),
+      'scopes': 'video.upload,user.info.basic',
+      'authEndpoint': 'https://www.tiktok.com/v2/auth/authorize/',
+      'isConnected': false,
+    },
   };
 
   @override
@@ -206,6 +263,417 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       );
   }
 
+  void _openOAuthDialog([String initialPlatform = 'youtube']) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0B0D10),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        String selectedKey = initialPlatform;
+        bool obscureSecret = true;
+        bool obscureKey = true;
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final config = _oauthConfigs[selectedKey]!;
+            final platformList = _oauthConfigs.entries.toList();
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 16,
+                left: 16,
+                right: 16,
+              ),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.88,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Title Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'إعدادات وتفويض المنصات (OAuth)',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            Text(
+                              'إدخال وتخزين بيانات الاعتماد للربط المباشر',
+                              style: TextStyle(color: Colors.white54, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white70),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Platform Selector Chips
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: platformList.map((entry) {
+                          final isSelected = entry.key == selectedKey;
+                          final isConnected = entry.value['isConnected'] == true;
+                          final pColor = entry.value['color'] as Color;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    entry.value['icon'] as IconData,
+                                    size: 16,
+                                    color: isSelected ? Colors.white : pColor,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    entry.value['name'] as String,
+                                    style: TextStyle(
+                                      color: isSelected ? Colors.white : Colors.white70,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  if (isConnected) ...[
+                                    const SizedBox(width: 5),
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.greenAccent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              selected: isSelected,
+                              selectedColor: const Color(0xFFE53935),
+                              backgroundColor: const Color(0xFF15191E),
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setModalState(() => selectedKey = entry.key);
+                                }
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Form Fields
+                    Expanded(
+                      child: ListView(
+                        children: [
+                          // Status Card
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: config['isConnected'] == true
+                                  ? const Color(0xFF132B1F)
+                                  : const Color(0xFF15191E),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: config['isConnected'] == true
+                                    ? Colors.greenAccent.withValues(alpha: 0.4)
+                                    : const Color(0xFF232A34),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  config['isConnected'] == true
+                                      ? Icons.check_circle
+                                      : Icons.info_outline,
+                                  color: config['isConnected'] == true
+                                      ? Colors.greenAccent
+                                      : const Color(0xFFFF5252),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    config['isConnected'] == true
+                                        ? 'الحساب مهيأ وجاهز للبث المباشر'
+                                        : 'لم يتم حفظ بيانات هذا الحساب بعد',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          // Client ID Field
+                          TextField(
+                            controller: config['clientId'] as TextEditingController,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: InputDecoration(
+                              labelText: 'Client ID / App ID',
+                              labelStyle: const TextStyle(color: Colors.white70),
+                              hintText: 'أدخل Client ID الخاص بـ ${config['name']}',
+                              hintStyle: const TextStyle(color: Colors.white30),
+                              prefixIcon: const Icon(Icons.vpn_key, color: Colors.white70),
+                              filled: true,
+                              fillColor: const Color(0xFF15191E),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF232A34)),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Client Secret Field
+                          TextField(
+                            controller: config['clientSecret'] as TextEditingController,
+                            obscureText: obscureSecret,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: InputDecoration(
+                              labelText: 'Client Secret / App Secret',
+                              labelStyle: const TextStyle(color: Colors.white70),
+                              hintText: 'أدخل Secret Key',
+                              hintStyle: const TextStyle(color: Colors.white30),
+                              prefixIcon: const Icon(Icons.lock, color: Colors.white70),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  obscureSecret ? Icons.visibility_off : Icons.visibility,
+                                  color: Colors.white60,
+                                ),
+                                onPressed: () => setModalState(() => obscureSecret = !obscureSecret),
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFF15191E),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF232A34)),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Redirect URI
+                          TextField(
+                            controller: config['redirectUri'] as TextEditingController,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: InputDecoration(
+                              labelText: 'Redirect URI',
+                              labelStyle: const TextStyle(color: Colors.white70),
+                              hintText: 'https://your-server.example.com/auth/callback',
+                              hintStyle: const TextStyle(color: Colors.white30),
+                              prefixIcon: const Icon(Icons.link, color: Colors.white70),
+                              filled: true,
+                              fillColor: const Color(0xFF15191E),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF232A34)),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Stream Key
+                          TextField(
+                            controller: config['streamKey'] as TextEditingController,
+                            obscureText: obscureKey,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: InputDecoration(
+                              labelText: 'Stream Key / Access Token',
+                              labelStyle: const TextStyle(color: Colors.white70),
+                              hintText: 'live_xxxx...',
+                              hintStyle: const TextStyle(color: Colors.white30),
+                              prefixIcon: const Icon(Icons.stream, color: Colors.white70),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  obscureKey ? Icons.visibility_off : Icons.visibility,
+                                  color: Colors.white60,
+                                ),
+                                onPressed: () => setModalState(() => obscureKey = !obscureKey),
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFF15191E),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF232A34)),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // RTMP Ingest URL
+                          TextField(
+                            controller: config['ingestUrl'] as TextEditingController,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: InputDecoration(
+                              labelText: 'RTMP Ingest Server URL',
+                              labelStyle: const TextStyle(color: Colors.white70),
+                              hintText: 'rtmp://...',
+                              hintStyle: const TextStyle(color: Colors.white30),
+                              prefixIcon: const Icon(Icons.cloud_upload, color: Colors.white70),
+                              filled: true,
+                              fillColor: const Color(0xFF15191E),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF232A34)),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Scopes Card
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF15191E),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFF232A34)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'OAuth Scopes المطلوبة:',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  config['scopes'] as String,
+                                  style: const TextStyle(color: Colors.white38, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+
+                    // Actions
+                    FilledButton.icon(
+                      onPressed: () {
+                        final cId = (config['clientId'] as TextEditingController).text.trim();
+                        final sKey = (config['streamKey'] as TextEditingController).text.trim();
+                        final isReady = cId.isNotEmpty || sKey.isNotEmpty;
+
+                        setState(() {
+                          config['isConnected'] = isReady;
+                        });
+                        setModalState(() {
+                          config['isConnected'] = isReady;
+                        });
+
+                        Navigator.pop(ctx);
+                        _showMessage('تم حفظ بيانات ${config['name']} بنجاح');
+                      },
+                      icon: const Icon(Icons.save),
+                      label: const Text('حفظ بيانات الاعتماد'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFE53935),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _connectProvider(selectedKey),
+                            icon: const Icon(Icons.open_in_browser, size: 18),
+                            label: const Text('ربط بالمتصفح', style: TextStyle(fontSize: 12)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: Color(0xFF2C3542)),
+                              padding: const EdgeInsets.symmetric(vertical: 11),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            (config['clientId'] as TextEditingController).clear();
+                            (config['clientSecret'] as TextEditingController).clear();
+                            (config['streamKey'] as TextEditingController).clear();
+                            setState(() {
+                              config['isConnected'] = false;
+                            });
+                            setModalState(() {
+                              config['isConnected'] = false;
+                            });
+                            _showMessage('تم مسح بيانات ${config['name']}');
+                          },
+                          icon: const Icon(Icons.delete, color: Color(0xFFFF5252), size: 18),
+                          label: const Text('مسح', style: TextStyle(color: Color(0xFFFF5252), fontSize: 12)),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFFF5252)),
+                            padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 14),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _destination(String name, IconData icon, Color brandColor) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -301,6 +769,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         ),
         centerTitle: true,
         actions: [
+          IconButton(
+            tooltip: 'إعدادات OAuth وحسابات البث',
+            onPressed: () => _openOAuthDialog('youtube'),
+            icon: const Icon(Icons.key, color: Colors.white),
+          ),
           IconButton(
             tooltip: 'إعادة تجهيز الكاميرا',
             onPressed: (_busy || _live) ? null : _prepareCamera,
@@ -524,42 +997,111 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
             const SizedBox(height: 12),
 
-            // OAuth Connect Buttons
+            // Dedicated OAuth Configuration Card Button
+            InkWell(
+              onTap: () => _openOAuthDialog('youtube'),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF15191E),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF232A34)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE53935).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.key, color: Color(0xFFE53935), size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'إعدادات وتفويض المنصات (OAuth)',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            'إدخال وحفظ Client ID و Secret و Stream Key',
+                            style: TextStyle(color: Colors.white54, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => _openOAuthDialog('youtube'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFFF5252),
+                        side: const BorderSide(color: Color(0xFFE53935)),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      child: const Text('تهيئة', style: TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // OAuth Connect Buttons for YouTube, Twitch, Facebook, TikTok
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _live ? null : () => _connectProvider('youtube'),
+                    onPressed: _live ? null : () => _openOAuthDialog('youtube'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: const BorderSide(color: Color(0xFF2C3542)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    child: const Text('YouTube'),
+                    child: const Text('YouTube', style: TextStyle(fontSize: 12)),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _live ? null : () => _connectProvider('facebook'),
+                    onPressed: _live ? null : () => _openOAuthDialog('twitch'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: const BorderSide(color: Color(0xFF2C3542)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    child: const Text('Facebook'),
+                    child: const Text('Twitch', style: TextStyle(fontSize: 12)),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _live ? null : () => _connectProvider('tiktok'),
+                    onPressed: _live ? null : () => _openOAuthDialog('facebook'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: const BorderSide(color: Color(0xFF2C3542)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    child: const Text('TikTok'),
+                    child: const Text('Facebook', style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _live ? null : () => _openOAuthDialog('tiktok'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF2C3542)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    child: const Text('TikTok', style: TextStyle(fontSize: 12)),
                   ),
                 ),
               ],
@@ -579,6 +1121,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             const SizedBox(height: 8),
 
             _destination('YouTube', Icons.play_circle_fill, const Color(0xFFFF0000)),
+            _destination('Twitch', Icons.tv, const Color(0xFF9146FF)),
             _destination('Facebook', Icons.facebook, const Color(0xFF1877F2)),
             _destination('TikTok', Icons.live_tv, const Color(0xFF00F2FE)),
 
