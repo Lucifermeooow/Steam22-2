@@ -1,0 +1,36 @@
+name: streamgit101
+
+description: Stream 22 Live Streaming Application
+
+publish_to: "none"
+
+version: 22.0.0+22
+
+environment:
+  sdk: ">=3.11.0 <4.0.0"
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  permission_handler: ^12.0.1
+
+  rtmp_streaming: ^2.0.1
+
+  url_launcher: ^6.3.2
+
+  wakelock_plus: ^1.7.0
+
+  package_info_plus: ^10.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
