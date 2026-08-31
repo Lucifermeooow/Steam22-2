@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Stream 22</string>
+    <string name="title_stream_22">Stream 22</string>
+    <string name="ready_to_stream">جاهز للبث</string>
+    <string name="camera_ready_hint">الكاميرا جاهزة — أدخل RTMP واضغط GO LIVE</string>
+    <string name="live_connected">🔴 LIVE — البث متصل بالسيرفر</string>
+    <string name="preparing_camera">جاري تجهيز الكاميرا والميكروفون...</string>
+    <string name="starting_stream">جاري بدء البث...</string>
+    <string name="stopped_stream">تم إيقاف البث</string>
+    <string name="permission_required">يجب السماح للكاميرا والميكروفون للمتابعة.</string>
+    <string name="server_rtmp_label">Server RTMP Ingest URL</string>
+    <string name="server_rtmp_hint">rtmp://your-server/live/stream-key</string>
+    <string name="server_relay_info">الهاتف يرسل بثاً واحداً إلى Red5 / Media Server. السيرفر هو المسؤول عن التوزيع للمنصات.</string>
+    <string name="oauth_backend_label">OAuth Backend HTTPS URL</string>
+    <string name="oauth_backend_hint">https://your-server.example.com</string>
+    <string name="broadcast_platforms">منصات البث</string>
+    <string name="platform_distribution_note">يتم التوزيع من السيرفر وليس من الهاتف</string>
+    <string name="reinit_camera">الكاميرا</string>
+    <string name="switch_camera">تغيير</string>
+    <string name="mute_mic">كتم الميكروفون</string>
+    <string name="unmute_mic">تشغيل الميكروفون</string>
+    <string name="go_live">GO LIVE</string>
+    <string name="stop_live">إيقاف البث</string>
+    <string name="stream_footer">Stream 22 • GitHub Ready</string>
+</resources>

@@ -16,13 +16,29 @@ class Stream22App extends StatelessWidget {
       title: 'Stream 22',
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.red,
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF0B0D10),
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFE53935),
+          brightness: Brightness.dark,
+          surface: const Color(0xFF15191E),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF262E3A)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF262E3A)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFE53935), width: 1.5),
+          ),
           filled: true,
-          fillColor: Color(0xFF15191E),
+          fillColor: const Color(0xFF15191E),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
       home: const HomePage(),
