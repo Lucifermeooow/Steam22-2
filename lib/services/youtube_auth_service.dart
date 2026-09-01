@@ -23,6 +23,8 @@ class YouTubeAuthService {
   static const String userinfoScope = 'https://www.googleapis.com/auth/userinfo.profile';
   static const String emailScope = 'https://www.googleapis.com/auth/userinfo.email';
 
+  static const String serverClientId = '18650771866-pj87a85tfl7vkrs0ij926n6q2ubqtdd3.apps.googleusercontent.com';
+
   final GoogleSignIn _googleSignIn;
   final TokenStorageService _tokenStorage;
   final http.Client _httpClient;
@@ -35,6 +37,7 @@ class YouTubeAuthService {
         _httpClient = httpClient ?? http.Client(),
         _googleSignIn = googleSignIn ??
             GoogleSignIn(
+              serverClientId: serverClientId,
               scopes: <String>[
                 emailScope,
                 userinfoScope,
