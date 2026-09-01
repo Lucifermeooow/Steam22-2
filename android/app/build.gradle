@@ -24,7 +24,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.ahmed.streamgit101"
-    compileSdk 35
+    compileSdk flutter.compileSdkVersion ?: 35
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -42,8 +42,8 @@ android {
 
     defaultConfig {
         applicationId "com.ahmed.streamgit101"
-        minSdkVersion 24
-        targetSdkVersion 35
+        minSdk flutter.minSdkVersion ?: 24
+        targetSdk flutter.targetSdkVersion ?: 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }

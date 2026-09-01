@@ -65,14 +65,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Settings
 import com.ahmed.streamgit101.R
 import com.ahmed.streamgit101.ui.components.CameraPreviewView
+import com.ahmed.streamgit101.ui.components.DestinationGridCard
 import com.ahmed.streamgit101.ui.components.DestinationTile
 import com.ahmed.streamgit101.ui.components.OAuthConfigurationDialog
 import com.ahmed.streamgit101.ui.components.StreamStatsRow
@@ -382,54 +382,101 @@ fun StreamScreen(
             Spacer(modifier = Modifier.height(18.dp))
 
             // Platforms Header
-            Text(
-                text = stringResource(R.string.broadcast_platforms),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.broadcast_platforms),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 )
-            )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF161B22))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    val activeCount = uiState.destinations.values.count { it }
+                    Text(
+                        text = "$activeCount مفعّل",
+                        style = TextStyle(
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White.copy(alpha = 0.7f)
+                        )
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            DestinationTile(
-                name = "YouTube",
-                icon = Icons.Default.PlayCircle,
-                isEnabled = uiState.destinations["YouTube"] ?: false,
-                isLive = uiState.isLive,
-                onToggle = { viewModel.toggleDestination("YouTube", it) },
-                modifier = Modifier.testTag("destination_youtube")
-            )
+            // 2x2 Visual Grid of Platforms
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                DestinationGridCard(
+                    name = "YouTube",
+                    icon = Icons.Default.PlayCircle,
+                    isEnabled = uiState.destinations["YouTube"] ?: false,
+                    isLive = uiState.isLive,
+                    onToggle = { isChecked -> viewModel.toggleDestination("YouTube", isChecked) },
+                    onConfigure = { viewModel.openOAuthConfig("youtube") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("destination_youtube")
+                )
 
-            DestinationTile(
-                name = "Twitch",
-                icon = Icons.Default.Tv,
-                isEnabled = uiState.destinations["Twitch"] ?: false,
-                isLive = uiState.isLive,
-                onToggle = { viewModel.toggleDestination("Twitch", it) },
-                modifier = Modifier.testTag("destination_twitch")
-            )
+                DestinationGridCard(
+                    name = "Twitch",
+                    icon = Icons.Default.Tv,
+                    isEnabled = uiState.destinations["Twitch"] ?: false,
+                    isLive = uiState.isLive,
+                    onToggle = { isChecked -> viewModel.toggleDestination("Twitch", isChecked) },
+                    onConfigure = { viewModel.openOAuthConfig("twitch") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("destination_twitch")
+                )
+            }
 
-            DestinationTile(
-                name = "Facebook",
-                icon = Icons.Default.VideoLibrary,
-                isEnabled = uiState.destinations["Facebook"] ?: false,
-                isLive = uiState.isLive,
-                onToggle = { viewModel.toggleDestination("Facebook", it) },
-                modifier = Modifier.testTag("destination_facebook")
-            )
+            Spacer(modifier = Modifier.height(10.dp))
 
-            DestinationTile(
-                name = "TikTok",
-                icon = Icons.Default.Tv,
-                isEnabled = uiState.destinations["TikTok"] ?: false,
-                isLive = uiState.isLive,
-                onToggle = { viewModel.toggleDestination("TikTok", it) },
-                modifier = Modifier.testTag("destination_tiktok")
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                DestinationGridCard(
+                    name = "Facebook",
+                    icon = Icons.Default.VideoLibrary,
+                    isEnabled = uiState.destinations["Facebook"] ?: false,
+                    isLive = uiState.isLive,
+                    onToggle = { isChecked -> viewModel.toggleDestination("Facebook", isChecked) },
+                    onConfigure = { viewModel.openOAuthConfig("facebook") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("destination_facebook")
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                DestinationGridCard(
+                    name = "TikTok",
+                    icon = Icons.Default.Tv,
+                    isEnabled = uiState.destinations["TikTok"] ?: false,
+                    isLive = uiState.isLive,
+                    onToggle = { isChecked -> viewModel.toggleDestination("TikTok", isChecked) },
+                    onConfigure = { viewModel.openOAuthConfig("tiktok") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("destination_tiktok")
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Camera Controls Row
             Row(

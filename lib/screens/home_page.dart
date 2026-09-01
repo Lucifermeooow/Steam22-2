@@ -674,67 +674,211 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _destination(String name, IconData icon, Color brandColor) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF15191E),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF232A34)),
-      ),
-      child: SwitchListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-        secondary: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: brandColor.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
+  Widget _destinationGridCard(String name, IconData icon, Color brandColor, String platformKey) {
+    final isEnabled = _destinations[name] ?? false;
+    final isConnected = _oauthConfigs[platformKey]?['isConnected'] == true;
+
+    return InkWell(
+      onTap: _live ? null : () => setState(() => _destinations[name] = !isEnabled),
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isEnabled
+              ? brandColor.withValues(alpha: 0.12)
+              : const Color(0xFF13171D),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isEnabled
+                ? brandColor.withValues(alpha: 0.65)
+                : const Color(0xFF222934),
+            width: isEnabled ? 1.5 : 1.0,
           ),
-          child: Icon(icon, color: brandColor, size: 22),
+          boxShadow: isEnabled
+              ? [
+                  BoxShadow(
+                    color: brandColor.withValues(alpha: 0.22),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : [],
         ),
-        title: Text(
-          name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-            color: Colors.white,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Top Row: Icon + Settings + Switch
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        brandColor.withValues(alpha: 0.95),
+                        brandColor.withValues(alpha: 0.65),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: isEnabled
+                        ? [
+                            BoxShadow(
+                              color: brandColor.withValues(alpha: 0.4),
+                              blurRadius: 8,
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 20),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'إعدادات $name',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                      icon: const Icon(Icons.tune, color: Colors.white54, size: 16),
+                      onPressed: () => _openOAuthDialog(platformKey),
+                    ),
+                    Transform.scale(
+                      scale: 0.8,
+                      child: Switch(
+                        value: isEnabled,
+                        activeColor: brandColor,
+                        activeTrackColor: brandColor.withValues(alpha: 0.35),
+                        inactiveThumbColor: Colors.white38,
+                        inactiveTrackColor: const Color(0xFF0F1318),
+                        onChanged: _live
+                            ? null
+                            : (val) => setState(() => _destinations[name] = val),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            const Spacer(),
+
+            // Platform Name & Connection Badge
+            Row(
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isConnected
+                        ? const Color(0xFF113824)
+                        : const Color(0xFF1C222A),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isConnected
+                          ? Colors.greenAccent.withValues(alpha: 0.5)
+                          : Colors.white24,
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: isConnected ? Colors.greenAccent : Colors.white38,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        isConnected ? 'مربوط' : 'غير مهيأ',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: isConnected ? Colors.greenAccent : Colors.white60,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 3),
+
+            // Live / Ready Status Text
+            Text(
+              isEnabled
+                  ? (_live ? '🔴 بث مباشر نشط' : 'جاهز للبث التلقائي')
+                  : 'معطّل حالياً',
+              style: TextStyle(
+                color: isEnabled
+                    ? (_live ? const Color(0xFFFF5252) : Colors.white70)
+                    : Colors.white38,
+                fontSize: 11,
+                fontWeight: isEnabled ? FontWeight.w500 : FontWeight.normal,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
-        subtitle: const Text(
-          'يتم التوزيع من السيرفر وليس من الهاتف',
-          style: TextStyle(fontSize: 12, color: Colors.white54),
-        ),
-        value: _destinations[name] ?? false,
-        activeColor: const Color(0xFFE53935),
-        onChanged: _live ? null : (value) => setState(() => _destinations[name] = value),
       ),
     );
   }
 
-  Widget _stat(String label, String value) {
+  Widget _destination(String name, IconData icon, Color brandColor, String platformKey) {
+    return _destinationGridCard(name, icon, brandColor, platformKey);
+  }
+
+  Widget _stat(String label, String value, IconData icon, Color accentColor) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         margin: const EdgeInsets.symmetric(horizontal: 3),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF181D24),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF262E3A)),
+          color: const Color(0xFF13171D),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF222936)),
         ),
         child: Column(
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 12, color: accentColor),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
+                color: accentColor,
                 fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: Colors.white,
+                fontSize: 14,
               ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white60, fontSize: 11),
             ),
           ],
         ),
@@ -745,9 +889,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0D10),
+      backgroundColor: const Color(0xFF090B0E),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B0D10),
+        backgroundColor: const Color(0xFF090B0E),
         elevation: 0,
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -755,15 +899,28 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: const Color(0xFFE53935).withValues(alpha: 0.2),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE53935), Color(0xFFFF5252)],
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFE53935).withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
-              child: const Icon(Icons.stream, color: Color(0xFFE53935), size: 18),
+              child: const Icon(Icons.stream, color: Colors.white, size: 18),
             ),
             const SizedBox(width: 8),
             const Text(
-              'Stream 22',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              'Stream 22 Pro',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                letterSpacing: 0.4,
+              ),
             ),
           ],
         ),
@@ -783,24 +940,24 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           children: [
             // Viewfinder View
             Container(
-              height: 280,
+              height: 290,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: const Color(0xFF050608),
-                borderRadius: BorderRadius.circular(20),
+                color: const Color(0xFF040507),
+                borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: _live ? const Color(0xFFE53935) : const Color(0xFF232A34),
+                  color: _live ? const Color(0xFFE53935) : const Color(0xFF222934),
                   width: _live ? 2.5 : 1.2,
                 ),
                 boxShadow: _live
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFE53935).withValues(alpha: 0.3),
-                          blurRadius: 18,
+                          color: const Color(0xFFE53935).withValues(alpha: 0.35),
+                          blurRadius: 20,
                           spreadRadius: 2,
                         )
                       ]
@@ -816,10 +973,71 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         center: Alignment.center,
                         radius: 0.9,
                         colors: [
-                          _live ? const Color(0xFF1E1012) : const Color(0xFF161B22),
-                          const Color(0xFF06080B),
+                          _live ? const Color(0xFF1E0E11) : const Color(0xFF141922),
+                          const Color(0xFF040608),
                         ],
                       ),
+                    ),
+                  ),
+
+                  // Framing HUD Grid Corners
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Stack(
+                      children: [
+                        Align(
+                          alignment: Alignment.topLeft,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: Colors.white24, width: 2),
+                                left: BorderSide(color: Colors.white24, width: 2),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: Colors.white24, width: 2),
+                                right: BorderSide(color: Colors.white24, width: 2),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(color: Colors.white24, width: 2),
+                                left: BorderSide(color: Colors.white24, width: 2),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(color: Colors.white24, width: 2),
+                                right: BorderSide(color: Colors.white24, width: 2),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -830,18 +1048,18 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       children: [
                         Icon(
                           _isFrontCamera ? Icons.person_pin : Icons.videocam,
-                          size: 72,
+                          size: 68,
                           color: _live
-                              ? const Color(0xFFFF5252).withValues(alpha: 0.9)
-                              : Colors.white30,
+                              ? const Color(0xFFFF5252).withValues(alpha: 0.95)
+                              : Colors.white38,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 8),
                         Text(
                           _live
-                              ? 'البث نشط • ${_formatDuration(_streamDurationSeconds)}'
-                              : (_isFrontCamera ? 'الكاميرا الأمامية (سيلفي)' : 'الكاميرا الرئيسية (خلفية)'),
+                              ? 'البث المباشر نشط • ${_formatDuration(_streamDurationSeconds)}'
+                              : (_isFrontCamera ? 'الكاميرا الأمامية (سيلفي)' : 'الكاميرا الخلفية (رئيسية)'),
                           style: TextStyle(
-                            color: _live ? const Color(0xFFFF5252) : Colors.white54,
+                            color: _live ? const Color(0xFFFF5252) : Colors.white60,
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
@@ -859,6 +1077,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       decoration: BoxDecoration(
                         color: _live ? const Color(0xFFE53935) : Colors.black54,
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _live ? const Color(0xFFFF5252) : Colors.white24,
+                          width: 0.8,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -898,23 +1120,87 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     ),
                   ),
 
-                  // Mic Status overlay
+                  // Top Right Quality & Mic overlay
                   Positioned(
                     top: 14,
                     right: 14,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: _muted
-                            ? const Color(0xFFE53935).withValues(alpha: 0.8)
-                            : Colors.black54,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _muted ? Icons.mic_off : Icons.mic,
-                        color: Colors.white,
-                        size: 16,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white24, width: 0.8),
+                          ),
+                          child: const Text(
+                            '1080p 60fps',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: _muted
+                                ? const Color(0xFFE53935).withValues(alpha: 0.85)
+                                : Colors.black54,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _muted ? const Color(0xFFFF5252) : Colors.white24,
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Icon(
+                            _muted ? Icons.mic_off : Icons.mic,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Bottom Camera Quick Actions on Viewfinder
+                  Positioned(
+                    bottom: 12,
+                    left: 14,
+                    right: 14,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.graphic_eq, size: 14, color: Colors.greenAccent),
+                              const SizedBox(width: 4),
+                              Text(
+                                _muted ? 'MIC OFF' : 'AUDIO OK',
+                                style: TextStyle(
+                                  color: _muted ? Colors.redAccent : Colors.greenAccent,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.flip_camera_android, color: Colors.white70, size: 20),
+                          tooltip: 'تبديل الكاميرا',
+                          onPressed: (_busy || _live) ? null : _switchCamera,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -925,24 +1211,37 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
             // Status Banner
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               decoration: BoxDecoration(
                 color: _live
                     ? const Color(0xFFE53935).withValues(alpha: 0.15)
-                    : const Color(0xFF15191E),
-                borderRadius: BorderRadius.circular(12),
+                    : const Color(0xFF13171D),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: _live ? const Color(0xFFE53935).withValues(alpha: 0.4) : const Color(0xFF232A34),
+                  color: _live
+                      ? const Color(0xFFE53935).withValues(alpha: 0.45)
+                      : const Color(0xFF222934),
                 ),
               ),
-              child: Text(
-                _status,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _live ? const Color(0xFFFF5252) : Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+              child: Row(
+                children: [
+                  Icon(
+                    _live ? Icons.radio_button_checked : Icons.info_outline,
+                    color: _live ? const Color(0xFFFF5252) : Colors.white70,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _status,
+                      style: TextStyle(
+                        color: _live ? const Color(0xFFFF5252) : Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -951,9 +1250,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               const SizedBox(height: 10),
               Row(
                 children: [
-                  _stat('Bitrate', _bitrate),
-                  _stat('FPS', _fps),
-                  _stat('RTT', _rtt),
+                  _stat('Bitrate', _bitrate, Icons.speed, const Color(0xFF00E676)),
+                  _stat('FPS', _fps, Icons.videocam, const Color(0xFF00B0FF)),
+                  _stat('RTT', _rtt, Icons.network_check, const Color(0xFFFFAB00)),
                 ],
               ),
             ],
@@ -965,7 +1264,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               controller: _rtmp,
               enabled: !_live,
               maxLines: 2,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: const TextStyle(color: Colors.white, fontSize: 13),
               decoration: const InputDecoration(
                 labelText: 'Server RTMP Ingest URL',
                 labelStyle: TextStyle(color: Colors.white70),
@@ -974,19 +1273,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 prefixIcon: Icon(Icons.link, color: Colors.white70),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             const Text(
               'الهاتف يرسل بثاً واحداً إلى Red5 / Media Server. السيرفر هو المسؤول عن التوزيع للمنصات.',
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              style: TextStyle(color: Colors.white54, fontSize: 11),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
 
             // OAuth Backend URL Field
             TextField(
               controller: _backend,
               enabled: !_live,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: const TextStyle(color: Colors.white, fontSize: 13),
               decoration: const InputDecoration(
                 labelText: 'OAuth Backend HTTPS URL',
                 labelStyle: TextStyle(color: Colors.white70),
@@ -1000,18 +1299,22 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             // Dedicated OAuth Configuration Card Button
             InkWell(
               onTap: () => _openOAuthDialog('youtube'),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF15191E),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF232A34)),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF161B24), Color(0xFF12161E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFF242C38)),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(9),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE53935).withValues(alpha: 0.15),
                         shape: BoxShape.circle,
@@ -1043,9 +1346,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFFF5252),
                         side: const BorderSide(color: Color(0xFFE53935)),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       ),
-                      child: const Text('تهيئة', style: TextStyle(fontSize: 12)),
+                      child: const Text('تهيئة', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -1062,7 +1365,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     onPressed: _live ? null : () => _openOAuthDialog('youtube'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF2C3542)),
+                      side: const BorderSide(color: Color(0xFF262F3C)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                     child: const Text('YouTube', style: TextStyle(fontSize: 12)),
@@ -1074,7 +1377,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     onPressed: _live ? null : () => _openOAuthDialog('twitch'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF2C3542)),
+                      side: const BorderSide(color: Color(0xFF262F3C)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                     child: const Text('Twitch', style: TextStyle(fontSize: 12)),
@@ -1086,7 +1389,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     onPressed: _live ? null : () => _openOAuthDialog('facebook'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF2C3542)),
+                      side: const BorderSide(color: Color(0xFF262F3C)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                     child: const Text('Facebook', style: TextStyle(fontSize: 12)),
@@ -1098,7 +1401,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     onPressed: _live ? null : () => _openOAuthDialog('tiktok'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF2C3542)),
+                      side: const BorderSide(color: Color(0xFF262F3C)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                     child: const Text('TikTok', style: TextStyle(fontSize: 12)),
@@ -1110,34 +1413,65 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             const SizedBox(height: 18),
 
             // Multistream Platforms Header
-            const Text(
-              'منصات البث',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'منصات البث المتزامن',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF161B22),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${_destinations.values.where((e) => e).length} مفعّل',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
-            _destination('YouTube', Icons.play_circle_fill, const Color(0xFFFF0000)),
-            _destination('Twitch', Icons.tv, const Color(0xFF9146FF)),
-            _destination('Facebook', Icons.facebook, const Color(0xFF1877F2)),
-            _destination('TikTok', Icons.live_tv, const Color(0xFF00F2FE)),
+            // 2x2 Visual Grid of Platforms
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.35,
+              children: [
+                _destinationGridCard('YouTube', Icons.play_circle_fill, const Color(0xFFFF0000), 'youtube'),
+                _destinationGridCard('Twitch', Icons.tv, const Color(0xFF9146FF), 'twitch'),
+                _destinationGridCard('Facebook', Icons.facebook, const Color(0xFF1877F2), 'facebook'),
+                _destinationGridCard('TikTok', Icons.live_tv, const Color(0xFF00F2FE), 'tiktok'),
+              ],
+            ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
-            // Camera Controls Row
+            // Quick Hardware Controls Row
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: (_busy || _live) ? null : _prepareCamera,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('الكاميرا'),
+                    icon: const Icon(Icons.camera_alt, size: 18),
+                    label: const Text('تجهيز الكاميرا'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF2C3542)),
+                      side: const BorderSide(color: Color(0xFF262F3C)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
@@ -1145,12 +1479,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: (_busy || _live) ? null : _switchCamera,
-                    icon: const Icon(Icons.flip_camera_android),
-                    label: const Text('تغيير'),
+                    onPressed: _initialized && !_busy ? _toggleMute : null,
+                    icon: Icon(
+                      _muted ? Icons.mic_off : Icons.mic,
+                      color: _muted ? const Color(0xFFFF5252) : Colors.white,
+                      size: 18,
+                    ),
+                    label: Text(_muted ? 'تشغيل المايك' : 'كتم المايك'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF2C3542)),
+                      side: const BorderSide(color: Color(0xFF262F3C)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
@@ -1158,38 +1496,34 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               ],
             ),
 
-            const SizedBox(height: 8),
-
-            // Mute / Unmute Button
-            OutlinedButton.icon(
-              onPressed: _initialized && !_busy ? _toggleMute : null,
-              icon: Icon(
-                _muted ? Icons.mic_off : Icons.mic,
-                color: _muted ? const Color(0xFFFF5252) : Colors.white,
-              ),
-              label: Text(_muted ? 'تشغيل الميكروفون' : 'كتم الميكروفون'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Color(0xFF2C3542)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-
             const SizedBox(height: 16),
 
-            // Main GO LIVE Button
-            SizedBox(
-              height: 56,
+            // Main GO LIVE Button with Pulse / Glow
+            Container(
+              height: 58,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: _live
+                        ? const Color(0xFF262E3A).withValues(alpha: 0.5)
+                        : const Color(0xFFE53935).withValues(alpha: 0.4),
+                    blurRadius: 16,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: FilledButton.icon(
                 onPressed: _busy ? null : (_live ? _stopStreaming : _startStreaming),
                 icon: Icon(
-                  _live ? Icons.stop_circle : Icons.live_tv,
+                  _live ? Icons.stop_circle : Icons.sensors,
                   size: 24,
                 ),
                 label: Text(
-                  _live ? 'إيقاف البث' : 'GO LIVE',
+                  _live ? 'إيقاف البث' : 'START MULTISTREAM',
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
@@ -1198,7 +1532,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   backgroundColor: _live ? const Color(0xFF262E3A) : const Color(0xFFE53935),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
@@ -1207,7 +1541,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             const SizedBox(height: 20),
 
             const Text(
-              'Stream 22 • GitHub Ready',
+              'Stream 22 Pro • Multistream Studio',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white38, fontSize: 12),
             ),
