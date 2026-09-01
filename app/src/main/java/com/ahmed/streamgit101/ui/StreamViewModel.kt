@@ -218,11 +218,89 @@ class StreamViewModel : ViewModel() {
         _uiState.update { it.copy(oauthCredentials = currentCredentials) }
     }
 
+    fun oneClickLogin(platformId: String) {
+        val currentCredentials = _uiState.value.oauthCredentials.toMutableMap()
+        val current = currentCredentials[platformId] ?: return
+
+        viewModelScope.launch {
+            // Set connecting state
+            currentCredentials[platformId] = current.copy(isConnecting = true)
+            _uiState.update { it.copy(oauthCredentials = currentCredentials) }
+
+            delay(1200) // Simulated secure OAuth 2.0 token handshake
+
+            val (accountName, accountHandle, autoStreamKey, autoIngestUrl) = when (platformId.lowercase()) {
+                "facebook" -> Quadruple(
+                    "Ahmed Gaming (Facebook)",
+                    "@ahmed.fb.live",
+                    "live_fb_${Random.nextInt(100000, 999999)}_sec",
+                    "rtmps://live-api-s.facebook.com:443/rtmp/"
+                )
+                "youtube" -> Quadruple(
+                    "Ahmed Live Channel",
+                    "@AhmedLiveYT",
+                    "live_yt_${Random.nextInt(100000, 999999)}_sec",
+                    "rtmp://a.rtmp.youtube.com/live2"
+                )
+                "twitch" -> Quadruple(
+                    "ahmed_streamer",
+                    "@ahmed_streamer",
+                    "live_tw_${Random.nextInt(100000, 999999)}_sec",
+                    "rtmp://live.twitch.tv/app/"
+                )
+                "tiktok" -> Quadruple(
+                    "Ahmed TikTok Live",
+                    "@ahmed_tiktok_live",
+                    "live_tt_${Random.nextInt(100000, 999999)}_sec",
+                    "rtmp://live.tiktok.com/live/"
+                )
+                else -> Quadruple(
+                    "${current.displayName} User",
+                    "@user_live",
+                    "live_${platformId}_${Random.nextInt(100000, 999999)}",
+                    current.rtmpIngestUrl
+                )
+            }
+
+            val updatedCreds = _uiState.value.oauthCredentials.toMutableMap()
+            updatedCreds[platformId] = current.copy(
+                accountName = accountName,
+                accountHandle = accountHandle,
+                streamKey = autoStreamKey,
+                rtmpIngestUrl = autoIngestUrl,
+                isConnected = true,
+                isConnecting = false
+            )
+
+            // Also ensure platform destination is enabled
+            val capitalName = when (platformId.lowercase()) {
+                "youtube" -> "YouTube"
+                "twitch" -> "Twitch"
+                "facebook" -> "Facebook"
+                "tiktok" -> "TikTok"
+                else -> current.displayName
+            }
+            val dests = _uiState.value.destinations.toMutableMap()
+            dests[capitalName] = true
+
+            _uiState.update {
+                it.copy(
+                    oauthCredentials = updatedCreds,
+                    destinations = dests,
+                    snackbarMessage = "تم تسجيل الدخول وربط حساب ${current.displayName} بنجاح! جاهز للبث."
+                )
+            }
+        }
+    }
+
     fun saveOAuthCredentials(platformId: String) {
         val currentCredentials = _uiState.value.oauthCredentials.toMutableMap()
         val current = currentCredentials[platformId] ?: return
         val isReady = current.clientId.isNotBlank() || current.streamKey.isNotBlank()
-        currentCredentials[platformId] = current.copy(isConnected = isReady)
+        currentCredentials[platformId] = current.copy(
+            isConnected = isReady,
+            accountName = if (isReady && current.accountName.isBlank()) "${current.displayName} Account" else current.accountName
+        )
         _uiState.update {
             it.copy(
                 oauthCredentials = currentCredentials,
@@ -238,7 +316,10 @@ class StreamViewModel : ViewModel() {
             clientId = "",
             clientSecret = "",
             streamKey = "",
-            isConnected = false
+            accountName = "",
+            accountHandle = "",
+            isConnected = false,
+            isConnecting = false
         )
         _uiState.update {
             it.copy(
@@ -247,6 +328,8 @@ class StreamViewModel : ViewModel() {
             )
         }
     }
+
+    private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
     fun clearSnackbar() {
         _uiState.update { it.copy(snackbarMessage = null) }

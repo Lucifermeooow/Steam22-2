@@ -15,12 +15,15 @@ enum class CameraLens {
 data class PlatformOAuthCredential(
     val platformId: String,
     val displayName: String,
+    val accountName: String = "",
+    val accountHandle: String = "",
     val clientId: String = "",
     val clientSecret: String = "",
     val redirectUri: String = "https://your-server.example.com/auth/callback",
     val streamKey: String = "",
     val rtmpIngestUrl: String = "",
     val isConnected: Boolean = false,
+    val isConnecting: Boolean = false,
     val scopes: String = "",
     val authEndpoint: String = ""
 )

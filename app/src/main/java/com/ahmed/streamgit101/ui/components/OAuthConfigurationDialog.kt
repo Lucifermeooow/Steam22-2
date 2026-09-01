@@ -25,6 +25,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -32,6 +35,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Save
@@ -39,10 +44,12 @@ import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +70,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -95,6 +103,7 @@ fun OAuthConfigurationDialog(
     credentials: Map<String, PlatformOAuthCredential>,
     backendUrl: String,
     onTabSelected: (String) -> Unit,
+    onOneClickLogin: (platformId: String) -> Unit,
     onUpdateField: (platformId: String, clientId: String?, clientSecret: String?, redirectUri: String?, streamKey: String?, rtmpIngestUrl: String?) -> Unit,
     onSave: (platformId: String) -> Unit,
     onDisconnect: (platformId: String) -> Unit,
@@ -104,15 +113,44 @@ fun OAuthConfigurationDialog(
 
     val context = LocalContext.current
     val tabs = listOf(
+        Triple("facebook", "Facebook", Icons.Default.VideoLibrary),
         Triple("youtube", "YouTube", Icons.Default.PlayCircle),
         Triple("twitch", "Twitch", Icons.Default.Tv),
-        Triple("facebook", "Facebook", Icons.Default.VideoLibrary),
         Triple("tiktok", "TikTok", Icons.Default.Tv)
     )
 
     val currentCred = credentials[selectedTab] ?: PlatformOAuthCredential(selectedTab, selectedTab)
     var showSecret by remember(selectedTab) { mutableStateOf(false) }
     var showStreamKey by remember(selectedTab) { mutableStateOf(false) }
+    var isAdvancedExpanded by remember(selectedTab) { mutableStateOf(false) }
+
+    val (brandColor, brandGradient, loginButtonText) = when (selectedTab.lowercase()) {
+        "facebook" -> Triple(
+            Color(0xFF1877F2),
+            Brush.verticalGradient(listOf(Color(0xFF1877F2), Color(0xFF0D47A1))),
+            "تسجيل الدخول بحساب Facebook"
+        )
+        "youtube" -> Triple(
+            Color(0xFFFF0000),
+            Brush.verticalGradient(listOf(Color(0xFFFF0000), Color(0xFFB71C1C))),
+            "تسجيل الدخول بحساب Google / YouTube"
+        )
+        "twitch" -> Triple(
+            Color(0xFF9146FF),
+            Brush.verticalGradient(listOf(Color(0xFF9146FF), Color(0xFF4A148C))),
+            "تسجيل الدخول بحساب Twitch"
+        )
+        "tiktok" -> Triple(
+            Color(0xFF00F2FE),
+            Brush.verticalGradient(listOf(Color(0xFF00C853), Color(0xFF004D40))),
+            "تسجيل الدخول بحساب TikTok"
+        )
+        else -> Triple(
+            StreamRed,
+            Brush.verticalGradient(listOf(StreamRed, Color(0xFF880E4F))),
+            "تسجيل الدخول وربط الحساب"
+        )
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -181,7 +219,7 @@ fun OAuthConfigurationDialog(
                     indicator = { tabPositions ->
                         TabRowDefaults.SecondaryIndicator(
                             Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
-                            color = StreamRed
+                            color = brandColor
                         )
                     },
                     modifier = Modifier
@@ -202,7 +240,7 @@ fun OAuthConfigurationDialog(
                                         imageVector = icon,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
-                                        tint = if (selectedIndex == index) StreamRedLight else TextSecondary
+                                        tint = if (selectedIndex == index) brandColor else TextSecondary
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
@@ -216,7 +254,7 @@ fun OAuthConfigurationDialog(
                                             modifier = Modifier
                                                 .size(6.dp)
                                                 .clip(CircleShape)
-                                                .background(Color(0xFF4CAF50))
+                                                .background(Color(0xFF00E676))
                                         )
                                     }
                                 }
@@ -225,284 +263,313 @@ fun OAuthConfigurationDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Form Scroll Content
+                // Scroll Content
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    // Status Badge
+                    // Hero 1-Click Login / Connected Card
                     Card(
                         colors = CardDefaults.cardColors(
-                            containerColor = if (currentCred.isConnected) Color(0xFF1B382B) else DarkSurface
+                            containerColor = if (currentCred.isConnected) Color(0xFF10281D) else DarkSurface
                         ),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 1.2.dp,
+                            color = if (currentCred.isConnected) Color(0xFF00E676).copy(alpha = 0.5f) else brandColor.copy(alpha = 0.4f)
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(
-                                imageVector = if (currentCred.isConnected) Icons.Default.CheckCircle else Icons.Default.Info,
-                                contentDescription = null,
-                                tint = if (currentCred.isConnected) Color(0xFF4CAF50) else StreamRedLight,
-                                modifier = Modifier.size(22.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(54.dp)
+                                    .clip(CircleShape)
+                                    .background(if (currentCred.isConnected) Color(0xFF00E676).copy(alpha = 0.2f) else brandColor.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (currentCred.isConnected) Icons.Default.CheckCircle else Icons.Default.AccountCircle,
+                                    contentDescription = null,
+                                    tint = if (currentCred.isConnected) Color(0xFF00E676) else brandColor,
+                                    modifier = Modifier.size(34.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = currentCred.displayName,
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            if (currentCred.isConnected) {
                                 Text(
-                                    text = if (currentCred.isConnected) stringResource(R.string.status_connected) else stringResource(R.string.status_not_configured),
+                                    text = "الحساب: ${currentCred.accountName.ifBlank { "حساب نشط" }}",
                                     style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
+                                        color = Color(0xFF00E676),
+                                        fontWeight = FontWeight.Bold
                                     )
                                 )
+                                if (currentCred.accountHandle.isNotBlank()) {
+                                    Text(
+                                        text = currentCred.accountHandle,
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = TextSecondary,
+                                            fontSize = 11.sp
+                                        )
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFF0A331E))
+                                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                                ) {
+                                    Text(
+                                        text = "✓ تم الربط وتوليد مفتاح البث تلقائياً",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = Color(0xFF81C784),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    )
+                                }
+                            } else {
                                 Text(
-                                    text = "المنصة: ${currentCred.displayName}",
+                                    text = "غير متصل — اضغط على الزر أدناه لتسجيل الدخول السريع",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = TextSecondary,
-                                        fontSize = 11.sp
+                                        fontSize = 12.sp,
+                                        textAlign = TextAlign.Center
                                     )
                                 )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // 1-Click Login Primary Button
+                            if (!currentCred.isConnected) {
+                                Button(
+                                    onClick = { onOneClickLogin(selectedTab) },
+                                    enabled = !currentCred.isConnecting,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp)
+                                        .testTag("one_click_login_button"),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = brandColor,
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    if (currentCred.isConnecting) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            strokeWidth = 2.dp,
+                                            color = Color.White
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text("جاري المصادقة وربط الحساب...", fontWeight = FontWeight.Bold)
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Login,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = loginButtonText,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 15.sp
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                OutlinedButton(
+                                    onClick = {
+                                        val backend = backendUrl.trim().removeSuffix("/")
+                                        val oauthUrl = if (currentCred.clientId.isNotBlank() && currentCred.authEndpoint.isNotBlank()) {
+                                            "${currentCred.authEndpoint}?client_id=${Uri.encode(currentCred.clientId)}&redirect_uri=${Uri.encode(currentCred.redirectUri)}&response_type=code&scope=${Uri.encode(currentCred.scopes)}"
+                                        } else {
+                                            "$backend/auth/$selectedTab/start"
+                                        }
+                                        try {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(oauthUrl))
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "تعذر فتح المتصفح: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("official_browser_login_button"),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("فتح صفحة تسجيل الدخول الرسمية بالمتصفح", fontSize = 12.sp)
+                                }
+                            } else {
+                                OutlinedButton(
+                                    onClick = { onDisconnect(selectedTab) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("disconnect_account_button"),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFF5252)),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF5252).copy(alpha = 0.6f)),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("تسجيل الخروج وفك ربط الحساب", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Client ID Field
-                    OutlinedTextField(
-                        value = currentCred.clientId,
-                        onValueChange = { onUpdateField(selectedTab, it, null, null, null, null) },
-                        label = { Text(stringResource(R.string.client_id_label)) },
-                        placeholder = { Text("أدخل Client ID الخاص بـ ${currentCred.displayName}") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Key, contentDescription = null, tint = TextSecondary)
-                        },
+                    // Collapsible Advanced Settings (Optional for power users)
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .testTag("oauth_client_id_input"),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = StreamRed,
-                            unfocusedBorderColor = DarkSurfaceBorder,
-                            focusedContainerColor = DarkSurface,
-                            unfocusedContainerColor = DarkSurface
-                        ),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Client Secret Field
-                    OutlinedTextField(
-                        value = currentCred.clientSecret,
-                        onValueChange = { onUpdateField(selectedTab, null, it, null, null, null) },
-                        label = { Text(stringResource(R.string.client_secret_label)) },
-                        placeholder = { Text("أدخل Client Secret") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Lock, contentDescription = null, tint = TextSecondary)
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { showSecret = !showSecret }) {
-                                Icon(
-                                    imageVector = if (showSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = null,
-                                    tint = TextSecondary
-                                )
-                            }
-                        },
-                        visualTransformation = if (showSecret) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("oauth_client_secret_input"),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = StreamRed,
-                            unfocusedBorderColor = DarkSurfaceBorder,
-                            focusedContainerColor = DarkSurface,
-                            unfocusedContainerColor = DarkSurface
-                        ),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Redirect URI
-                    OutlinedTextField(
-                        value = currentCred.redirectUri,
-                        onValueChange = { onUpdateField(selectedTab, null, null, it, null, null) },
-                        label = { Text(stringResource(R.string.redirect_uri_label)) },
-                        placeholder = { Text("https://your-server.example.com/auth/callback") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Link, contentDescription = null, tint = TextSecondary)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("oauth_redirect_uri_input"),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = StreamRed,
-                            unfocusedBorderColor = DarkSurfaceBorder,
-                            focusedContainerColor = DarkSurface,
-                            unfocusedContainerColor = DarkSurface
-                        ),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Stream Key Field
-                    OutlinedTextField(
-                        value = currentCred.streamKey,
-                        onValueChange = { onUpdateField(selectedTab, null, null, null, it, null) },
-                        label = { Text(stringResource(R.string.stream_key_label)) },
-                        placeholder = { Text("live_xxx... أو Stream Key الخاص بك") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Lock, contentDescription = null, tint = TextSecondary)
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { showStreamKey = !showStreamKey }) {
-                                Icon(
-                                    imageVector = if (showStreamKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = null,
-                                    tint = TextSecondary
-                                )
-                            }
-                        },
-                        visualTransformation = if (showStreamKey) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("oauth_stream_key_input"),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = StreamRed,
-                            unfocusedBorderColor = DarkSurfaceBorder,
-                            focusedContainerColor = DarkSurface,
-                            unfocusedContainerColor = DarkSurface
-                        ),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // RTMP Ingest Server URL
-                    OutlinedTextField(
-                        value = currentCred.rtmpIngestUrl,
-                        onValueChange = { onUpdateField(selectedTab, null, null, null, null, it) },
-                        label = { Text(stringResource(R.string.ingest_url_label)) },
-                        placeholder = { Text("rtmp://...") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Link, contentDescription = null, tint = TextSecondary)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("oauth_ingest_url_input"),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = StreamRed,
-                            unfocusedBorderColor = DarkSurfaceBorder,
-                            focusedContainerColor = DarkSurface,
-                            unfocusedContainerColor = DarkSurface
-                        ),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Scopes info
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = DarkSurface),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable { isAdvancedExpanded = !isAdvancedExpanded }
+                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.VpnKey,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "OAuth Scopes المطلوبة:",
+                                text = stringResource(R.string.advanced_manual_settings),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = TextSecondary
                                 )
                             )
-                            Text(
-                                text = currentCred.scopes,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = Color.LightGray,
-                                    fontSize = 11.sp
-                                )
-                            )
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(18.dp))
-                }
-
-                // Action Buttons at bottom
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Button(
-                        onClick = { onSave(selectedTab) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .testTag("save_oauth_button"),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = StreamRed,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Save, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.save_credentials),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                        Icon(
+                            imageVector = if (isAdvancedExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = TextSecondary
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                val backend = backendUrl.trim().removeSuffix("/")
-                                val oauthUrl = if (currentCred.clientId.isNotBlank() && currentCred.authEndpoint.isNotBlank()) {
-                                    "${currentCred.authEndpoint}?client_id=${Uri.encode(currentCred.clientId)}&redirect_uri=${Uri.encode(currentCred.redirectUri)}&response_type=code&scope=${Uri.encode(currentCred.scopes)}"
-                                } else {
-                                    "$backend/auth/$selectedTab/start"
-                                }
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(oauthUrl))
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "تعذر فتح متصفح المصادقة: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                                }
-                            },
+                    AnimatedVisibility(visible = isAdvancedExpanded) {
+                        Column(
                             modifier = Modifier
-                                .weight(1f)
-                                .testTag("connect_oauth_browser_button"),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(DarkSurface)
+                                .padding(14.dp)
                         ) {
-                            Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("ربط عبر المتصفح", fontSize = 13.sp)
-                        }
+                            OutlinedTextField(
+                                value = currentCred.clientId,
+                                onValueChange = { onUpdateField(selectedTab, it, null, null, null, null) },
+                                label = { Text(stringResource(R.string.client_id_label)) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("oauth_client_id_input"),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = brandColor,
+                                    unfocusedBorderColor = DarkSurfaceBorder
+                                ),
+                                singleLine = true
+                            )
 
-                        OutlinedButton(
-                            onClick = { onDisconnect(selectedTab) },
-                            modifier = Modifier
-                                .weight(0.8f)
-                                .testTag("disconnect_oauth_button"),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFF5252))
-                        ) {
-                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("مسح", fontSize = 13.sp)
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            OutlinedTextField(
+                                value = currentCred.clientSecret,
+                                onValueChange = { onUpdateField(selectedTab, null, it, null, null, null) },
+                                label = { Text(stringResource(R.string.client_secret_label)) },
+                                trailingIcon = {
+                                    IconButton(onClick = { showSecret = !showSecret }) {
+                                        Icon(
+                                            imageVector = if (showSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = null,
+                                            tint = TextSecondary
+                                        )
+                                    }
+                                },
+                                visualTransformation = if (showSecret) VisualTransformation.None else PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("oauth_client_secret_input"),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = brandColor,
+                                    unfocusedBorderColor = DarkSurfaceBorder
+                                ),
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            OutlinedTextField(
+                                value = currentCred.streamKey,
+                                onValueChange = { onUpdateField(selectedTab, null, null, null, it, null) },
+                                label = { Text(stringResource(R.string.stream_key_label)) },
+                                trailingIcon = {
+                                    IconButton(onClick = { showStreamKey = !showStreamKey }) {
+                                        Icon(
+                                            imageVector = if (showStreamKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = null,
+                                            tint = TextSecondary
+                                        )
+                                    }
+                                },
+                                visualTransformation = if (showStreamKey) VisualTransformation.None else PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("oauth_stream_key_input"),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = brandColor,
+                                    unfocusedBorderColor = DarkSurfaceBorder
+                                ),
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Button(
+                                onClick = { onSave(selectedTab) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("save_manual_settings_button"),
+                                colors = ButtonDefaults.buttonColors(containerColor = brandColor),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(stringResource(R.string.save_credentials), fontSize = 13.sp)
+                            }
                         }
                     }
                 }

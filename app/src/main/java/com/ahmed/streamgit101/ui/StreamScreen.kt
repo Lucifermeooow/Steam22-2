@@ -421,27 +421,31 @@ fun StreamScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 DestinationGridCard(
+                    name = "Facebook",
+                    icon = Icons.Default.VideoLibrary,
+                    isEnabled = uiState.destinations["Facebook"] ?: false,
+                    isLive = uiState.isLive,
+                    credential = uiState.oauthCredentials["facebook"],
+                    onToggle = { isChecked -> viewModel.toggleDestination("Facebook", isChecked) },
+                    onConfigure = { viewModel.openOAuthConfig("facebook") },
+                    onOneClickLogin = { viewModel.oneClickLogin("facebook") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("destination_facebook")
+                )
+
+                DestinationGridCard(
                     name = "YouTube",
                     icon = Icons.Default.PlayCircle,
                     isEnabled = uiState.destinations["YouTube"] ?: false,
                     isLive = uiState.isLive,
+                    credential = uiState.oauthCredentials["youtube"],
                     onToggle = { isChecked -> viewModel.toggleDestination("YouTube", isChecked) },
                     onConfigure = { viewModel.openOAuthConfig("youtube") },
+                    onOneClickLogin = { viewModel.oneClickLogin("youtube") },
                     modifier = Modifier
                         .weight(1f)
                         .testTag("destination_youtube")
-                )
-
-                DestinationGridCard(
-                    name = "Twitch",
-                    icon = Icons.Default.Tv,
-                    isEnabled = uiState.destinations["Twitch"] ?: false,
-                    isLive = uiState.isLive,
-                    onToggle = { isChecked -> viewModel.toggleDestination("Twitch", isChecked) },
-                    onConfigure = { viewModel.openOAuthConfig("twitch") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("destination_twitch")
                 )
             }
 
@@ -452,15 +456,17 @@ fun StreamScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 DestinationGridCard(
-                    name = "Facebook",
-                    icon = Icons.Default.VideoLibrary,
-                    isEnabled = uiState.destinations["Facebook"] ?: false,
+                    name = "Twitch",
+                    icon = Icons.Default.Tv,
+                    isEnabled = uiState.destinations["Twitch"] ?: false,
                     isLive = uiState.isLive,
-                    onToggle = { isChecked -> viewModel.toggleDestination("Facebook", isChecked) },
-                    onConfigure = { viewModel.openOAuthConfig("facebook") },
+                    credential = uiState.oauthCredentials["twitch"],
+                    onToggle = { isChecked -> viewModel.toggleDestination("Twitch", isChecked) },
+                    onConfigure = { viewModel.openOAuthConfig("twitch") },
+                    onOneClickLogin = { viewModel.oneClickLogin("twitch") },
                     modifier = Modifier
                         .weight(1f)
-                        .testTag("destination_facebook")
+                        .testTag("destination_twitch")
                 )
 
                 DestinationGridCard(
@@ -468,8 +474,10 @@ fun StreamScreen(
                     icon = Icons.Default.Tv,
                     isEnabled = uiState.destinations["TikTok"] ?: false,
                     isLive = uiState.isLive,
+                    credential = uiState.oauthCredentials["tiktok"],
                     onToggle = { isChecked -> viewModel.toggleDestination("TikTok", isChecked) },
                     onConfigure = { viewModel.openOAuthConfig("tiktok") },
+                    onOneClickLogin = { viewModel.oneClickLogin("tiktok") },
                     modifier = Modifier
                         .weight(1f)
                         .testTag("destination_tiktok")
@@ -597,6 +605,7 @@ fun StreamScreen(
         credentials = uiState.oauthCredentials,
         backendUrl = uiState.backendUrl,
         onTabSelected = { viewModel.selectOAuthTab(it) },
+        onOneClickLogin = { viewModel.oneClickLogin(it) },
         onUpdateField = { platformId, clientId, clientSecret, redirectUri, streamKey, rtmpIngestUrl ->
             viewModel.updateOAuthField(platformId, clientId, clientSecret, redirectUri, streamKey, rtmpIngestUrl)
         },
