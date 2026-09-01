@@ -48,6 +48,7 @@ data class StreamUiState(
         "youtube" to PlatformOAuthCredential(
             platformId = "youtube",
             displayName = "YouTube Live",
+            clientId = "18650771866-gp6bbiqdrtba00bqcb2eic8i55hoeqoj.apps.googleusercontent.com",
             rtmpIngestUrl = "rtmp://a.rtmp.youtube.com/live2",
             scopes = "https://www.googleapis.com/auth/youtube.force-ssl",
             authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -62,8 +63,10 @@ data class StreamUiState(
         "facebook" to PlatformOAuthCredential(
             platformId = "facebook",
             displayName = "Facebook Live",
+            clientId = "1041366175430588",
+            redirectUri = "https://www.facebook.com/connect/login_success.html",
             rtmpIngestUrl = "rtmps://live-api-s.facebook.com:443/rtmp/",
-            scopes = "publish_video,pages_show_list",
+            scopes = "email,public_profile,user_videos",
             authEndpoint = "https://www.facebook.com/v19.0/dialog/oauth"
         ),
         "tiktok" to PlatformOAuthCredential(
