@@ -1,21 +1,15 @@
-# Stream 22
+# Stream 22 Pro - Multistream Studio
 
-GitHub-ready Flutter Android live-streaming client.
+Official Real Mobile Multistreaming Application for Android.
 
-## What is included
+## Features & Architecture
 
-- Camera + microphone permissions.
-- Camera preview.
-- RTMP publishing from the phone.
-- 1080p-class `ResolutionPreset.high` capture with 30 FPS target and 1500 kbps video / 128 kbps audio defaults.
-- Start / stop live controls.
-- Camera switching.
-- Microphone mute/unmute.
-- Screen wakelock while live.
-- Basic live statistics: bitrate, FPS and RTT when the RTMP plugin exposes them.
-- YouTube / Facebook / TikTok destination switches as server-routing configuration.
-- HTTPS OAuth backend buttons for `/auth/youtube/start`, `/auth/facebook/start`, `/auth/tiktok/start`.
-- GitHub Actions workflow that installs Java 17, pins Flutter 3.47.2, runs format/analyze/tests, and builds a release APK.
+- **Real YouTube Live Integration**: Google OAuth 2.0 + YouTube Data API v3 (`liveBroadcasts.insert`, `liveStreams.insert`, `liveBroadcasts.bind`).
+- **Real Facebook Live Integration**: Meta Graph API v19.0 (`/me/live_videos`).
+- **Real Twitch Integration**: Twitch Helix API user validation.
+- **TikTok Stream Key Ingest Support**: Zero-permission direct RTMP key binding.
+- **Secure KeyStore Storage**: `flutter_secure_storage` with Android KeyStore encryption.
+- **Zero-Fake Architecture**: Real live lifecycle, real account info, zero simulated data in production.
 
 ## Important architecture
 
