@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Center circular glow -->
+    <path
+        android:pathData="M54,54m-28,0a28,28 0,1 1,56 0a28,28 0,1 1,-56 0"
+        android:fillColor="#E53935" />
+    <!-- Broadcast Waves Left -->
+    <path
+        android:pathData="M38,44 A14,14 0 0,0 38,64"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M32,38 A22,22 0 0,0 32,70"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.6"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+    <!-- Broadcast Waves Right -->
+    <path
+        android:pathData="M70,44 A14,14 0 0,1 70,64"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M76,38 A22,22 0 0,1 76,70"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.6"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+    <!-- Center Play/Stream Icon -->
+    <path
+        android:pathData="M49,43 L63,54 L49,65 Z"
+        android:fillColor="#FFFFFF" />
+</vector>
